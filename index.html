@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>2027학년도 학급 배정 결과 조회</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5efe2;
+    --ink: #2a2924;
+    --ink-soft: #6b665b;
+    --board: #2f4a3c;
+    --board-deep: #263d31;
+    --wood: #b58a5c;
+    --wood-dark: #8f6a43;
+    --chalk: #f7f4ea;
+    --chalk-yellow: #f6d867;
+    --chalk-pink: #f4adb9;
+    --line: #d9cfbb;
+    --warn: #a3412c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(246, 216, 103, .22), transparent 38%),
+      radial-gradient(circle at 92% 0%, rgba(244, 173, 185, .22), transparent 34%),
+      var(--paper);
+    color: var(--ink);
+    font-family: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    padding: 28px 16px 40px;
+  }
+  .wrap { max-width: 460px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 18px; }
+  .school {
+    display: inline-block; font-size: 14px; letter-spacing: .08em; color: var(--ink-soft);
+    padding: 2px 12px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.5);
+  }
+  h1 { font-size: 23px; line-height: 1.35; margin: 10px 0 0; font-weight: 400; text-wrap: balance; }
+  h1 b { font-weight: 400; color: var(--board); box-shadow: inset 0 -9px 0 rgba(246, 216, 103, .6); }
+
+  /* 칠판 */
+  .board {
+    position: relative; overflow: hidden;
+    background:
+      radial-gradient(ellipse at 22% 30%, rgba(255,255,255,.07), transparent 55%),
+      radial-gradient(ellipse at 80% 75%, rgba(255,255,255,.05), transparent 50%),
+      linear-gradient(160deg, var(--board), var(--board-deep));
+    border: 10px solid var(--wood);
+    border-bottom-width: 0;
+    border-radius: 8px 8px 0 0;
+    box-shadow: inset 0 0 0 2px var(--wood-dark), inset 0 0 40px rgba(0,0,0,.25);
+    min-height: 196px;
+    padding: 22px 18px 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; color: var(--chalk);
+    font-family: 'Gaegu', 'Gowun Dodum', sans-serif;
+  }
+  .tray {
+    height: 16px; background: linear-gradient(var(--wood), var(--wood-dark));
+    border-radius: 0 0 8px 8px; position: relative;
+    box-shadow: 0 10px 18px -10px rgba(60, 40, 20, .55);
+  }
+  .tray i { position: absolute; top: -5px; height: 7px; border-radius: 3px; }
+  .tray i:nth-child(1) { left: 14%; width: 34px; background: var(--chalk); transform: rotate(-2deg); }
+  .tray i:nth-child(2) { left: 26%; width: 22px; background: var(--chalk-yellow); transform: rotate(3deg); }
+  .tray i:nth-child(3) { right: 12%; width: 44px; height: 11px; top: -9px; background: #5d6d7e; border-radius: 2px; }
+
+  .date { position: absolute; top: 10px; right: 14px; font-size: 16px; color: rgba(247,244,234,.7); }
+  .line1 { font-size: 22px; margin: 0; color: rgba(247,244,234,.92); }
+  .big {
+    margin: 4px 0 0; font-size: 58px; line-height: 1.1; font-weight: 700; color: var(--chalk-yellow);
+    text-shadow: 0 0 1px rgba(246,216,103,.6);
+  }
+  .big small { font-size: .62em; color: var(--chalk); font-weight: 400; margin: 0 .12em 0 .04em; }
+  .sub { margin: 8px 0 0; font-size: 19px; color: rgba(247,244,234,.8); }
+  .write { animation: write .9s ease-out both; }
+  .write.d2 { animation-delay: .35s; }
+  .write.d3 { animation-delay: 1s; }
+  @keyframes write { from { clip-path: inset(0 100% 0 0); opacity: .4; } to { clip-path: inset(0 0 0 0); opacity: 1; } }
+
+  /* 꽃가루 */
+  .petal { position: absolute; top: -14px; width: 9px; height: 13px; border-radius: 60% 40% 60% 40%; opacity: 0;
+    animation: fall 2.6s ease-in forwards; pointer-events: none; }
+  @keyframes fall {
+    0% { transform: translateY(0) rotate(0); opacity: 0; }
+    12% { opacity: .95; }
+    100% { transform: translateY(240px) rotate(300deg); opacity: 0; }
+  }
+
+  /* 입력 */
+  form {
+    margin-top: 22px; background: #fffdf8; border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px 18px 18px; box-shadow: 0 1px 0 #fff inset, 0 12px 24px -18px rgba(60,40,20,.4);
+  }
+  .field + .field { margin-top: 16px; }
+  label, legend { display: block; font-size: 15px; margin-bottom: 6px; padding: 0; color: var(--ink); }
+  fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .hint { font-size: 13.5px; color: var(--ink-soft); margin: 6px 0 0; }
+  input[type=text], select {
+    width: 100%; height: 50px; font: inherit; font-size: 17px; color: var(--ink);
+    background: #fff; border: 1.5px solid var(--line); border-radius: 10px; padding: 0 12px;
+    appearance: none; -webkit-appearance: none;
+  }
+  select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+    background-position: calc(100% - 17px) 22px, calc(100% - 12px) 22px;
+    background-size: 5px 5px; background-repeat: no-repeat; padding-right: 28px;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible {
+    outline: 3px solid rgba(246, 216, 103, .9); outline-offset: 1px; border-color: var(--board);
+  }
+  .birth { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 8px; }
+  .extra { margin-top: 16px; padding: 12px; background: #fbf3d6; border-radius: 10px; }
+  .extra p { margin: 0 0 8px; font-size: 14.5px; }
+  [hidden] { display: none !important; }
+
+  button {
+    margin-top: 20px; width: 100%; height: 54px; border: 0; border-radius: 12px; cursor: pointer;
+    font: inherit; font-size: 18px; color: #fff; background: var(--board);
+    box-shadow: 0 4px 0 var(--board-deep); transition: transform .08s, box-shadow .08s;
+  }
+  button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--board-deep); }
+  button[disabled] { opacity: .6; cursor: default; }
+  .msg { margin: 14px 0 0; font-size: 15px; color: var(--warn); min-height: 1.6em; text-align: center; }
+
+  footer { margin-top: 20px; text-align: center; font-size: 13.5px; color: var(--ink-soft); }
+  footer p { margin: 0; white-space: pre-line; }
+
+  @media (max-width: 380px) { .big { font-size: 48px; } h1 { font-size: 21px; } }
+  @media (prefers-reduced-motion: reduce) {
+    .write { animation: none; } .petal { display: none; } button { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="school" id="school"></span>
+    <h1><b id="year"></b> 학급 배정 결과 조회</h1>
+  </header>
+
+  <div class="board" id="board" aria-live="polite"></div>
+  <div class="tray" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <form id="form" novalidate>
+    <div class="field">
+      <label for="name">학생 이름</label>
+      <input type="text" id="name" name="name" maxlength="20" autocomplete="off" placeholder="예: 홍길동">
+    </div>
+
+    <div class="field">
+      <fieldset>
+        <legend>학생 생년월일</legend>
+        <div class="birth">
+          <select id="y" aria-label="태어난 해"></select>
+          <select id="m" aria-label="태어난 달"></select>
+          <select id="d" aria-label="태어난 날"></select>
+        </div>
+      </fieldset>
+      <p class="hint">태어난 해, 달, 날을 차례로 골라 주세요.</p>
+    </div>
+
+    <div class="extra" id="extra" hidden>
+      <p>이름과 생년월일이 같은 학생이 있습니다. 새로 올라가는 학년을 골라 주세요.</p>
+      <select id="grade" aria-label="새 학년"></select>
+    </div>
+
+    <button type="submit" id="btn">조회하기</button>
+    <p class="msg" id="msg" role="alert"></p>
+  </form>
+
+  <footer><p id="notice"></p></footer>
+</div>
+
+<script>
+/* 조회 요청을 받는 구글 Apps Script 웹 앱 주소 */
+var API_URL = 'https://script.google.com/macros/s/AKfycbwIEp6Xk78TulIA9hJF_lyInrX5TDq1HudmFv2U75dCyeno_GoT--pptr59dn4WEY9ZFQ/exec';
+
+/* 설정을 불러오기 전까지 보여 줄 기본값. 실제 값은 구글 시트 [설정]에서 가져옵니다. */
+var CFG = { school: '대전갑천초등학교', year: 2027, notice: '', open: false, closedMsg: '', birthFrom: 2013, birthTo: 2021 };
+
+/* 구글 로그인 정보를 싣지 않고 요청합니다. (휴대폰에 구글 계정이 여러 개여도 영향 없음) */
+function api(body) {
+  return fetch(API_URL, {
+    method: 'POST',
+    credentials: 'omit',
+    redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(body)
+  }).then(function (r) { return r.json(); });
+}
+
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var board = $('board'), form = $('form'), btn = $('btn'), msg = $('msg');
+
+  function paintHeader() {
+    $('school').textContent = CFG.school;
+    $('school').hidden = !CFG.school;
+    $('year').textContent = CFG.year + '학년도';
+    $('notice').textContent = CFG.notice;
+    document.title = CFG.year + '학년도 학급 배정 결과 조회';
+  }
+  paintHeader();
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function option(sel, value, text) {
+    var o = el('option', '', text); o.value = value; sel.appendChild(o);
+  }
+
+  /* 생년월일 선택 칸 */
+  function fillYears() {
+    var sel = $('y'), keep = sel.value;
+    sel.textContent = '';
+    option(sel, '', '연도');
+    for (var y = CFG.birthTo; y >= CFG.birthFrom; y--) option(sel, y, y + '년');
+    sel.value = keep;
+  }
+  fillYears();
+  option($('m'), '', '월');
+  for (var m = 1; m <= 12; m++) option($('m'), m, m + '월');
+  function fillDays() {
+    var d = $('d'), keep = d.value, yy = +$('y').value || 2016, mm = +$('m').value || 1;
+    var last = new Date(yy, mm, 0).getDate();
+    d.textContent = '';
+    option(d, '', '일');
+    for (var i = 1; i <= last; i++) option(d, i, i + '일');
+    if (+keep <= last) d.value = keep;
+  }
+  fillDays();
+  $('y').addEventListener('change', fillDays);
+  $('m').addEventListener('change', fillDays);
+
+  option($('grade'), '', '학년 선택');
+  for (var g = 1; g <= 6; g++) option($('grade'), g, g + '학년');
+
+  /* 칠판 */
+  function show(lines) {
+    board.textContent = '';
+    board.appendChild(el('span', 'date', CFG.year + '학년도'));
+    lines.forEach(function (n) { board.appendChild(n); });
+  }
+  function idle() {
+    show([el('p', 'line1', '이름과 생년월일을 입력하면'), el('p', 'line1', '새 학급을 알려 드려요')]);
+  }
+  function petals() {
+    var colors = ['#f4adb9', '#f6d867', '#f7f4ea', '#f9c9d1'];
+    for (var i = 0; i < 16; i++) {
+      var p = el('span', 'petal');
+      p.style.left = (4 + Math.random() * 92) + '%';
+      p.style.background = colors[i % colors.length];
+      p.style.animationDelay = (Math.random() * 1.1) + 's';
+      board.appendChild(p);
+    }
+  }
+  function showResult(name, grade, cls) {
+    var big = el('p', 'big write d2');
+    big.appendChild(document.createTextNode(grade));
+    big.appendChild(el('small', '', '학년'));
+    big.appendChild(document.createTextNode(cls));
+    big.appendChild(el('small', '', '반'));
+    show([el('p', 'line1 write', name + ' 학생은'), big, el('p', 'sub write d3', '새 학년을 응원합니다!')]);
+    petals();
+  }
+
+  /* 여러 번 틀렸을 때 구분하기 위한 임의 번호 (개인정보 아님) */
+  var cid = '';
+  try {
+    cid = localStorage.getItem('cid') || '';
+    if (!cid) { cid = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('cid', cid); }
+  } catch (e) { cid = Math.random().toString(36).slice(2); }
+
+  function busy(on) { btn.disabled = on; btn.textContent = on ? '찾는 중…' : '조회하기'; }
+
+  function handle(res, name) {
+    busy(false);
+    res = res || {};
+    if (res.status === 'ok') { $('extra').hidden = true; showResult(name, res.grade, res.cls); return; }
+    idle();
+    if (res.status === 'need_grade') {
+      $('extra').hidden = false; $('grade').focus(); return;
+    }
+    var text = {
+      notfound: '일치하는 정보가 없습니다. 이름과 생년월일을 다시 확인해 주세요.',
+      pending: '아직 반이 확정되지 않았습니다. 잠시 후 다시 조회해 주세요.',
+      multi: '조회로 확인하기 어려운 경우입니다. 담임 선생님께 문의해 주세요.',
+      invalid: '이름과 생년월일을 모두 입력해 주세요.',
+      closed: res.msg || '지금은 조회 기간이 아닙니다.',
+      blocked: '여러 번 틀려서 ' + (res.minutes || 10) + '분 동안 조회할 수 없습니다.'
+    }[res.status] || '일시적인 오류입니다. 잠시 후 다시 시도해 주세요.';
+    if (res.status === 'notfound' && res.left > 0 && res.left <= 2) text += ' (남은 횟수 ' + res.left + '번)';
+    msg.textContent = text;
+  }
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    msg.textContent = '';
+    var name = $('name').value.replace(/\s+/g, '');
+    var req = { name: name, y: $('y').value, m: $('m').value, d: $('d').value, cid: cid,
+                grade: $('extra').hidden ? '' : $('grade').value };
+    if (!name) { msg.textContent = '학생 이름을 입력해 주세요.'; $('name').focus(); return; }
+    if (!req.y || !req.m || !req.d) { msg.textContent = '생년월일의 연도, 월, 일을 모두 골라 주세요.'; return; }
+    if (!$('extra').hidden && !req.grade) { msg.textContent = '새로 올라가는 학년을 골라 주세요.'; return; }
+    busy(true);
+    api(req).then(function (res) { handle(res, name); }, function () { handle({}, name); });
+  });
+
+  /* 이름이나 생년월일을 바꾸면 학년 추가 질문을 접습니다. */
+  ['name', 'y', 'm', 'd'].forEach(function (id) {
+    $(id).addEventListener('input', function () { $('extra').hidden = true; $('grade').value = ''; });
+  });
+
+  /* 시작: 설정을 불러온 뒤 조회 칸을 엽니다. */
+  form.hidden = true;
+  show([el('p', 'line1', '잠시만 기다려 주세요')]);
+  api({ action: 'config' }).then(function (cfg) {
+    if (!cfg || typeof cfg.year === 'undefined') throw new Error('config');
+    CFG = cfg;
+    paintHeader();
+    fillYears();
+    if (CFG.open) {
+      form.hidden = false;
+      idle();
+    } else {
+      show([el('p', 'line1', CFG.closedMsg || '지금은 조회 기간이 아닙니다.')]);
+    }
+  }).catch(function () {
+    show([el('p', 'line1', '연결이 원활하지 않습니다'), el('p', 'sub', '잠시 후 새로 고침해 주세요')]);
+  });
+})();
+</script>
+</body>
+</html>
